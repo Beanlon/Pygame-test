@@ -12,7 +12,7 @@ pygame.display.set_caption('Platform Game')
 TILE_SIZE = 60  # Proportional size based on GCD
 
 # Load and scale background image
-background = pygame.image.load("Sky3.jpg")  
+background = pygame.image.load("Sky3.jpg")
 background = pygame.transform.scale(background, (WIDTH, HEIGHT))
 
 def draw_grid():
@@ -32,9 +32,9 @@ class Player():
         self.vel_y = 0  # Vertical velocity (for gravity and jumping)
         self.jump = False  # Track if the player is jumping
         self.speed = 0.6  # Horizontal movement speed
-        self.jump_force = -6 # Initial jump force (higher)
-        self.gravity_up = 0.10  # Weak gravity during ascent (slower jump)
-        self.gravity_down = 0.1  # Stronger gravity during descent (faster fall)
+        self.jump_force = -6  # Initial jump force (higher)
+        self.gravity_up = 0.1  # Weak gravity during ascent (slower jump)
+        self.gravity_down = 0.4  # Stronger gravity during descent (faster fall)
 
     def move(self, world):
         # Get key presses
@@ -42,15 +42,15 @@ class Player():
 
         # Horizontal movement
         dx = 0
-        if keys[pygame.K_LEFT] or keys[pygame.K_a]: 
+        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
             dx = -self.speed
-        if keys[pygame.K_RIGHT] or keys[pygame.K_d]: 
+        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
             dx = self.speed
 
         # Jumping
         if keys[pygame.K_SPACE] and not self.jump:
             self.vel_y = self.jump_force  # Jump with new jump force
-            self.jump = True  
+            self.jump = True
 
         # Apply gravity (slower ascent, faster descent)
         if self.vel_y < 0:
@@ -63,6 +63,7 @@ class Player():
 
         dy = self.vel_y
 
+        # Horizontal collision checks
         for tile in world.tile_list:
             if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.rect.width, self.rect.height):
                 dx = 0  # Stop moving horizontally if colliding
@@ -78,8 +79,7 @@ class Player():
                     dy = tile[1].bottom - self.rect.top
                     self.vel_y = 0
 
-
-        # Boundary checks
+        # Boundary checks (stopping player from going out of bounds)
         if self.rect.x + dx < 0:  # Left boundary
             dx = 0
         if self.rect.x + dx > WIDTH - self.rect.width:  # Right boundary
@@ -101,25 +101,25 @@ class World():
     def __init__(self, data):
         self.tile_list = []
 
-        grass_img = pygame.image.load("Block2.png")  
+        grass_img = pygame.image.load("Block2.png")
         dirt_img = pygame.image.load("Dirt.png")
-        dirt2_img = pygame.image.load("Block3.png")  
+        dirt2_img = pygame.image.load("Block3.png")
 
         row_count = 0
         for row in data:
             col_count = 0
-            for tile in row:  
+            for tile in row:
                 if tile == 1:
                     img = pygame.transform.scale(grass_img, (TILE_SIZE, TILE_SIZE))
                     img_rect = img.get_rect()
                     img_rect.topleft = (col_count * TILE_SIZE, row_count * TILE_SIZE)
                     self.tile_list.append((img, img_rect))
-                elif tile == 2:  
+                elif tile == 2:
                     img = pygame.transform.scale(dirt_img, (TILE_SIZE, TILE_SIZE))
                     img_rect = img.get_rect()
                     img_rect.topleft = (col_count * TILE_SIZE, row_count * TILE_SIZE)
                     self.tile_list.append((img, img_rect))
-                elif tile == 3:  
+                elif tile == 3:
                     img = pygame.transform.scale(dirt2_img, (TILE_SIZE, TILE_SIZE))
                     img_rect = img.get_rect()
                     img_rect.topleft = (col_count * TILE_SIZE, row_count * TILE_SIZE)
@@ -132,25 +132,18 @@ class World():
             screen.blit(tile[0], tile[1])
 
 # World data (platforms)
-# World data (matching tile size 60px)
 world_data = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 2, 0, 3, 3, 3],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3],
-    [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3],
-    [0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3],
-    [1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 3], 
-    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2] 
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2]
 ]
-
-
-# Now the world layout is 25 tiles wide by 12 tiles high.
-
 
 player = Player(100, HEIGHT - 150)  # Place player on the ground
 world = World(world_data)
@@ -162,12 +155,11 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-    screen.blit(background, (0, 0))
-    world.draw(screen)
-    draw_grid()
-    player.move(world)  # Move the player
+    screen.blit(background, (0, 0))  # Draw the background
+    world.draw(screen)  # Draw the world (tiles)
+    draw_grid()  # Draw the grid (for debugging)
+    player.move(world)  # Move the player based on input and collisions
     player.draw(screen)  # Draw the player on the screen
-    
-    pygame.display.update()
+    pygame.display.update()  # Update the screen
 
-pygame.quit()
+pygame.quit()  # Quit Pygame when the game loop is done
