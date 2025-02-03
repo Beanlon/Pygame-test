@@ -8,7 +8,7 @@ WIDTH, HEIGHT = 1501, 720
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption('Platform Game')
 
-# Choose a proportional tile size
+# Choose a proportional tile size   
 TILE_SIZE = 60  # Proportional size based on GCD
 
 # Load and scale background image
@@ -25,14 +25,14 @@ def draw_grid():
 class Player():
     def __init__(self, x, y):
         img = pygame.image.load("guy1.png")
-        self.image = pygame.transform.scale(img, (40, 79))
+        self.image = pygame.transform.scale(img, (36, 60))
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
-        self.vel_y = 0  # Vertical velocity (for gravity and jumping)
+        self.vel_y = 1.1  # Vertical velocity (for gravity and jumping)
         self.jump = False  # Track if the player is jumping
-        self.speed = 0.6  # Horizontal movement speed
-        self.jump_force = -6 # Initial jump force (higher)
+        self.speed = 2  # Horizontal movement speed
+        self.jump_force = -5.7 # Initial jump force (higher)
         self.gravity_up = 0.10  # Weak gravity during ascent (slower jump)
         self.gravity_down = 0.1  # Stronger gravity during descent (faster fall)
 
@@ -63,6 +63,13 @@ class Player():
 
         dy = self.vel_y
 
+        def draw(self, screen):
+            """Draws the player on the screen along with a rectangle."""
+            # Draw the player image
+            screen.blit(self.image, self.rect)
+    
+
+        # Horizontal collision check
         for tile in world.tile_list:
             if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.rect.width, self.rect.height):
                 dx = 0  # Stop moving horizontally if colliding
@@ -71,13 +78,12 @@ class Player():
         for tile in world.tile_list:
             if tile[1].colliderect(self.rect.x, self.rect.y + dy, self.rect.width, self.rect.height):
                 if self.vel_y > 0:  # Falling down
-                    dy = tile[1].top - self.rect.bottom
+                    dy = tile[1].top - self.rect.bottom  # Prevent falling into the tile
                     self.vel_y = 0
                     self.jump = False  # Reset jumping when landing
                 elif self.vel_y < 0:  # Hitting the ceiling
-                    dy = tile[1].bottom - self.rect.top
+                    dy = tile[1].bottom - self.rect.top  # Prevent moving into the ceiling
                     self.vel_y = 0
-
 
         # Boundary checks
         if self.rect.x + dx < 0:  # Left boundary
@@ -139,18 +145,17 @@ world_data = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 2, 0, 3, 3, 3],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3],
-    [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3],
-    [0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3],
-    [1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 3], 
-    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2] 
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 
+    
 ]
 
-
 # Now the world layout is 25 tiles wide by 12 tiles high.
-
 
 player = Player(100, HEIGHT - 150)  # Place player on the ground
 world = World(world_data)
