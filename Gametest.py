@@ -157,7 +157,6 @@ while running:
 
     screen.blit(background, (0, 0))  # Draw the background
     world.draw(screen)  # Draw the world (tiles)
-    draw_grid()  # Draw the grid (for debugging)
     player.move(world)  # Move the player based on input and collisions
     player.draw(screen)  # Draw the player on the screen
     pygame.display.update()  # Update the screen
