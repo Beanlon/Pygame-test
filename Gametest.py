@@ -1,4 +1,5 @@
 import pygame
+import random
 
 # Initialize Pygame
 pygame.init()
@@ -24,6 +25,44 @@ def draw_grid():
     for y in range(0, HEIGHT, TILE_SIZE):  # Horizontal lines
         pygame.draw.line(screen, (255, 255, 255), (0, y), (WIDTH, y))
 
+class Platform(pygame.sprite.Sprite):
+    def __init__(self, x, y, width, moving):
+        pygame.sprite.Sprite.__init__(self)
+        # Load platform image
+        self.image = pygame.image.load("Block2.png")  # Replace with your platform image
+        self.image = pygame.transform.scale(self.image, (width, 20))  # Adjust height as needed
+        self.moving = moving
+        self.start_x = x
+        self.move_counter = 0
+        self.direction = 1  # Start moving to the right
+        self.speed = 3  # Consistent speed
+        self.range = TILE_SIZE * 2  # Limit movement to two tiles
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+
+    def update(self, platforms):
+        # Moving platform side to side within the two-tile range
+        if self.moving:
+            # Save the current position
+            original_x = self.rect.x
+
+            # Move the platform
+            self.rect.x += self.direction * self.speed
+
+            # Check for collision with other platforms
+            for platform in platforms:
+                if platform != self and self.rect.colliderect(platform.rect):
+                    # If collision detected, revert the movement
+                    self.rect.x = original_x
+                    self.direction *= -1  # Reverse direction
+                    break
+
+            # Ensure the platform doesn't move beyond the range
+            if abs(self.rect.x - self.start_x) >= self.range:
+                self.rect.x = original_x
+                self.direction *= -1  # Reverse direction
+
 class Player:
     def __init__(self, x, y):
         self.images_right = []
@@ -47,8 +86,9 @@ class Player:
         self.direction = 0
         self.in_air = False
         self.alive = True  # Track if the player is alive
+        self.on_platform = False  # Track if the player is on a platform
 
-    def update(self):
+    def update(self, platforms):
         if not self.alive:  # Stop updating if dead
             return
 
@@ -106,7 +146,7 @@ class Player:
         if self.rect.x + dx + self.width > WIDTH:
             dx = WIDTH - (self.rect.x + self.width)  
 
-        # Check for collision
+        # Check for collision with tiles
         self.in_air = True  
         for tile in world.tile_list:
             if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
@@ -119,6 +159,24 @@ class Player:
                     dy = tile[1].top - self.rect.bottom
                     self.vel_y = 0
                     self.in_air = False  
+
+        # Check for collision with platforms
+        self.on_platform = False
+        for platform in platforms:
+            if platform.rect.colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
+                dx = 0
+            if platform.rect.colliderect(self.rect.x, self.rect.y + dy, self.width, self.height):
+                if self.vel_y < 0:  
+                    dy = platform.rect.bottom - self.rect.top
+                    self.vel_y = 0
+                elif self.vel_y >= 0:  
+                    dy = platform.rect.top - self.rect.bottom
+                    self.vel_y = 0
+                    self.in_air = False
+                    self.on_platform = True
+                    # Move player horizontally with the platform
+                    if platform.moving:
+                        self.rect.x += platform.direction * platform.speed
 
         # Update player coordinates
         self.rect.x += dx
@@ -149,10 +207,10 @@ def restart_game():
     player = Player(100, HEIGHT - 150)  # Reset player position
     world = World(world_data)  # Reload world
 
-    
 class World:
     def __init__(self, data):
         self.tile_list = []
+        self.platforms = pygame.sprite.Group()
 
         grass_img = pygame.image.load("Block2.png")  
         dirt_img = pygame.image.load("Dirt.png")
@@ -177,12 +235,16 @@ class World:
                     img_rect = img.get_rect()
                     img_rect.topleft = (col_count * TILE_SIZE, row_count * TILE_SIZE)
                     self.tile_list.append((img, img_rect))
+                elif tile == 4:  # Platform
+                    platform = Platform(col_count * TILE_SIZE, row_count * TILE_SIZE, TILE_SIZE, True)
+                    self.platforms.add(platform)
                 col_count += 1
             row_count += 1
 
     def draw(self, screen):
         for tile in self.tile_list:
             screen.blit(tile[0], tile[1])
+        self.platforms.draw(screen)
 
 # World data (platforms)
 world_data = [
@@ -193,14 +255,14 @@ world_data = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 1, 1, 1, 1, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 2],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [1, 1, 1, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1]
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 3],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3],
+    [0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3],
+    [1, 1, 1, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2]
 ]
 
 player = Player(100, HEIGHT - 150)  # Place player on the ground
@@ -230,25 +292,18 @@ def main_menu():
 # Game loop
 running = True
 while running:
-    start_game = main_menu()  # Show the main menu before starting the game
-    if not start_game:
-        break  # Exit the game if the user chooses to quit
+    clock.tick(60)
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
 
-    # Reset game state
-    player = Player(100, HEIGHT - 150)
-    world = World(world_data)
-
-    while running:
-        clock.tick(60)
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-
-        screen.blit(background, (0, 0))
-        world.draw(screen)
-        
-        player.update()
-        
-        pygame.display.update()
+    screen.blit(background, (0, 0))
+    world.draw(screen)
+    player.update(world.platforms)
+    for platform in world.platforms:
+        platform.update(world.platforms)  # Pass the list of platforms to the update method
+    draw_grid()
+    pygame.display.update()
 
 pygame.quit()
+
