@@ -26,39 +26,31 @@ def draw_grid():
         pygame.draw.line(screen, (255, 255, 255), (0, y), (WIDTH, y))
 
 class Platform(pygame.sprite.Sprite):
-    def __init__(self, x, y, width, moving):
+    def __init__(self, x, y, width, moving, direction=1):
         pygame.sprite.Sprite.__init__(self)
-        # Load platform image
-        self.image = pygame.image.load("Block2.png")  # Replace with your platform image
-        self.image = pygame.transform.scale(self.image, (width, 20))  # Adjust height as needed
+        self.image = pygame.image.load("Block2.png")
+        self.image = pygame.transform.scale(self.image, (width, 20))
         self.moving = moving
         self.start_x = x
         self.move_counter = 0
-        self.direction = 1  # Start moving to the right
-        self.speed = 3  # Consistent speed
-        self.range = TILE_SIZE * 2  # Limit movement to two tiles
+        self.direction = direction  # Set initial direction (1 for right, -1 for left)
+        self.speed = 3
+        self.range = TILE_SIZE * 2  
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
 
     def update(self, platforms):
-        # Moving platform side to side within the two-tile range
         if self.moving:
-            # Save the current position
             original_x = self.rect.x
-
-            # Move the platform
             self.rect.x += self.direction * self.speed
 
-            # Check for collision with other platforms
             for platform in platforms:
                 if platform != self and self.rect.colliderect(platform.rect):
-                    # If collision detected, revert the movement
                     self.rect.x = original_x
                     self.direction *= -1  # Reverse direction
                     break
 
-            # Ensure the platform doesn't move beyond the range
             if abs(self.rect.x - self.start_x) >= self.range:
                 self.rect.x = original_x
                 self.direction *= -1  # Reverse direction
@@ -235,9 +227,13 @@ class World:
                     img_rect = img.get_rect()
                     img_rect.topleft = (col_count * TILE_SIZE, row_count * TILE_SIZE)
                     self.tile_list.append((img, img_rect))
-                elif tile == 4:  # Platform
-                    platform = Platform(col_count * TILE_SIZE, row_count * TILE_SIZE, TILE_SIZE, True)
+                elif tile == 4:  # Moving platform
+                    platform = Platform(col_count * TILE_SIZE, row_count * TILE_SIZE, TILE_SIZE, True, direction=1)
                     self.platforms.add(platform)
+                elif tile == 5:  # Moving platform in opposite direction
+                    platform = Platform(col_count * TILE_SIZE, row_count * TILE_SIZE, TILE_SIZE, True, direction=-1)
+                    self.platforms.add(platform)
+
                 col_count += 1
             row_count += 1
 
@@ -250,11 +246,11 @@ class World:
 world_data = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 4, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [2, 2, 1, 1, 1, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 1, 1, 1, 1, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
