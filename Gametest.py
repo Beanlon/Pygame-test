@@ -285,21 +285,27 @@ def main_menu():
                 if WIDTH // 2 - 50 <= mouse_pos[0] <= WIDTH // 2 + 50 and HEIGHT // 2 + 50 <= mouse_pos[1] <= HEIGHT // 2 + 100:
                     return False  # Quit the game
 
-# Game loop
 running = True
-while running:
-    clock.tick(60)
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
+game_started = False
 
-    screen.blit(background, (0, 0))
-    world.draw(screen)
-    player.update(world.platforms)
-    for platform in world.platforms:
-        platform.update(world.platforms)  # Pass the list of platforms to the update method
-    draw_grid()
-    pygame.display.update()
+while running:
+    if not game_started:
+        # Show main menu until the player starts or quits
+        game_started = main_menu()
+
+    if game_started:
+        # Main game logic
+        clock.tick(60)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+        screen.blit(background, (0, 0))
+        world.draw(screen)
+        player.update(world.platforms)
+        for platform in world.platforms:
+            platform.update(world.platforms)  # Pass the list of platforms to the update method
+        draw_grid()
+        pygame.display.update()
 
 pygame.quit()
-
